@@ -1,0 +1,1 @@
+1. Each database (no matter KVDB or TSDB), must have at least two sectors. A database's sector size must be multiple of the flash's block size (in STM it is also called sector size, where a block is the erase minimum granularity). It can be multiple of flash's block size so when erase a database's sector, multiple flash blocks can be erased at the same time.
