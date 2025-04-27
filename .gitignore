@@ -1,2 +1,4 @@
 CMake-GCC-Build/
 .vscode/
+*.img
+*.so

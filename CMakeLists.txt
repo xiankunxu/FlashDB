@@ -25,9 +25,12 @@ add_library(${THIS_MODULE_NAME} STATIC
 
 # Specify include directories for the library
 # This makes the header files available to targets linking against this library.
-target_include_directories(${THIS_MODULE_NAME} PUBLIC
+set(INCLUDE_DIRS 
     "${CMAKE_CURRENT_SOURCE_DIR}/inc"
     "${CMAKE_CURRENT_SOURCE_DIR}/port/fal/inc"
+)
+target_include_directories(${THIS_MODULE_NAME} PUBLIC
+    ${INCLUDE_DIRS}
 )
 
 # There are some format warnings in the FlashDB library that we want to ignore
