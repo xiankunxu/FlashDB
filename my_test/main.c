@@ -8,17 +8,15 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include "flashdb.h"
-#include "fal_cfg.h" // FAL configuration
-#include "fdb_cfg.h" // FDB configuration
 
 #define FLASH_FILE_PATH "flash.img"
-
 
 static int flash_fd = -1;
 static pthread_mutex_t flash_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-/* FAL port functions: operate on flash.img */
+/* ==================================================================== */
 
+/* FAL port functions: operate on flash.img */
 int my_init(void) {
     flash_fd = open(FLASH_FILE_PATH, O_RDWR | O_CREAT, 0644);
     if (flash_fd < 0) {
@@ -30,8 +28,8 @@ int my_init(void) {
         perror("fstat");
         return -1;
     }
-    if ((size_t)st.st_size != FLASH_SIZE) {
-        if (ftruncate(flash_fd, FLASH_SIZE) < 0) {
+    if ((size_t)st.st_size != flashdev_sim.addr + flashdev_sim.len) {
+        if (ftruncate(flash_fd, flashdev_sim.addr + flashdev_sim.len) < 0) {
             perror("ftruncate");
             return -1;
         }
@@ -40,8 +38,8 @@ int my_init(void) {
 }
 
 int my_read(long offset, uint8_t *buf, size_t size) {
-    if (offset + size > FLASH_SIZE) return -1;
-    if (lseek(flash_fd, offset, SEEK_SET) < 0) {
+    if (offset + size > flashdev_sim.len) return -1;
+    if (lseek(flash_fd, flashdev_sim.addr + offset, SEEK_SET) < 0) {
         perror("lseek read");
         return -1;
     }
@@ -49,8 +47,8 @@ int my_read(long offset, uint8_t *buf, size_t size) {
 }
 
 int my_write(long offset, const uint8_t *buf, size_t size) {
-    if (offset + size > FLASH_SIZE) return -1;
-    if (lseek(flash_fd, offset, SEEK_SET) < 0) {
+    if (offset + size > flashdev_sim.len) return -1;
+    if (lseek(flash_fd, flashdev_sim.addr + offset, SEEK_SET) < 0) {
         perror("lseek write");
         return -1;
     }
@@ -58,8 +56,8 @@ int my_write(long offset, const uint8_t *buf, size_t size) {
 }
 
 int my_erase(long offset, size_t size) {
-    if (offset + size > FLASH_SIZE) return -1;
-    if (lseek(flash_fd, offset, SEEK_SET) < 0) {
+    if (offset + size > flashdev_sim.len) return -1;
+    if (lseek(flash_fd, flashdev_sim.addr + offset, SEEK_SET) < 0) {
         perror("lseek erase");
         return -1;
     }
@@ -78,21 +76,6 @@ int my_erase(long offset, size_t size) {
     return 0;
 }
 
-/* ====================== FAL Configuration ========================= */
-
-/* Define a simulated flash device backed by our file */
-const struct fal_flash_dev flashdev_sim = {
-    .name       = "sim_flash",      /* device name */
-    .addr       = 0,                 /* base offset in file */
-    .len        = FLASH_SIZE,        /* total size */
-    .blk_size   = BLOCK_SIZE,        /* erase block size */
-    .ops        = {my_init, my_read, my_write, my_erase},
-    .write_gran = 1,
-};
-
-/* ==================================================================== */
-
-
 /* Lock and unlock for thread safety */
 void lock(void) {
     pthread_mutex_lock(&flash_mutex);
@@ -105,7 +88,7 @@ void unlock(void) {
 extern void kvdb_basic_sample(struct fdb_kvdb *kvdb);
 extern void kvdb_type_string_sample(struct fdb_kvdb *kvdb);
 extern void kvdb_type_blob_sample(struct fdb_kvdb *kvdb);
- extern void tsdb_sample(fdb_tsdb_t tsdb);
+extern void tsdb_sample(fdb_tsdb_t tsdb);
 
 static uint32_t boot_count = 0;
 static time_t boot_time[10] = {0, 1, 2, 3};

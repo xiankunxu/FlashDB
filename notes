@@ -1,1 +1,51 @@
 1. Each database (no matter KVDB or TSDB), must have at least two sectors. A database's sector size must be multiple of the flash's block size (in STM it is also called sector size, where a block is the erase minimum granularity). It can be multiple of flash's block size so when erase a database's sector, multiple flash blocks can be erased at the same time.
+
+2. Inside FlashDB, for read(), write(), erase() functions and the address calculation. The address is relative to the start address of the sectors that are used for FlashDB use.
+For example, if for STM32F7, the last four sectors are used for FlashDB. We will have the below definition for the flash device:
+
+#define SECTOR_SIZE  (256 * 1024) // 256 KiB for the last four sectors of STM32F7
+#define FLASH_SIZE  (4 * SECTOR_SIZE)
+const struct fal_flash_dev flashdev_sim = {
+    .name       = "STM32F7_FLASH",       /* device name */
+    .addr       = 0x08100000,        /* Start address of the flash */
+    .len        = FLASH_SIZE,        /* total size for the flash device(FlashDB using) */
+    .blk_size   = SECTOR_SIZE,        /* erase block size */
+    .ops        = {my_init, my_read, my_write, my_erase},
+    .write_gran = 8,
+};
+{                                                                                        \
+    {FAL_PART_MAGIC_WORD,  "fdb_kvdb1",    "STM32F7_FLASH", 0*SECTOR_SIZE, 2*SECTOR_SIZE, 0},  \
+    {FAL_PART_MAGIC_WORD,  "fdb_tsdb1",    "STM32F7_FLASH", 2*SECTOR_SIZE, 2*SECTOR_SIZE, 0},  \
+}
+The fdb_kvdb1 and fdb_tsdb1's offset is relative to the flashdev_sim.addr.
+For the above example, fdb_kvdb1's start address is flashdev_sim.addr + 0*SECTOR_SIZE, and the end address is flashdev_sim.addr + 2*SECTOR_SIZE -1. fdb_tsdb1's start address is flashdev_sim.addr + 2*SECTOR_SIZE, and the end address is flashdev_sim.addr + 4*SECTOR_SIZE -1.
+
+Then in read(), write(), erase() functions, the actual address should be flashdev_sim.addr + offset. As follows:
+static int read(long offset, uint8_t *buf, size_t size)
+{
+    size_t i;
+    long addr = flashdev_sim.addr + offset; // This is the actual address in flash
+
+    for (i = 0; i < size; i++, buf++, addr++)
+    {
+        *buf = *(uint8_t *) addr;
+    }
+
+    return size;
+}
+
+Of course, the above flash device definition can also be write as:
+
+const struct fal_flash_dev flashdev_sim = {
+    .name       = "STM32F7_FLASH",       /* device name */
+    .addr       = 0x08000000,         /* Start address of the flash */
+    .len        = 2 * 1024 * 1024,        /* total size for the flash device(FlashDB using) */
+    .blk_size   = 256 * 1024,        /* erase block size, the last four sector have size 256 K */
+    .ops        = {my_init, my_read, my_write, my_erase},
+    .write_gran = 8,
+};
+{                                                                                        \
+    {FAL_PART_MAGIC_WORD,  "fdb_kvdb1",    "STM32F7_FLASH", 0x100000, 2 * 256 * 1024, 0},  \
+    {FAL_PART_MAGIC_WORD,  "fdb_tsdb1",    "STM32F7_FLASH", 0x180000, 2 * 256 * 1024, 0},  \
+}
+Note the offset now changed to 0x100000 and 0x180000, always remember the offset is relative to the flashdev_sim.addr. 

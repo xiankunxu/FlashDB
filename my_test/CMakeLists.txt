@@ -14,12 +14,22 @@ add_subdirectory(
   "${CMAKE_CURRENT_BINARY_DIR}/flashdb"
 )
 
+# This defines MACRO FAL_FLASHDB_LINUX_FILE_SIM for both the flashdb_test_exe and flashdb_test_lib targets.
+add_compile_definitions(
+    FAL_FLASHDB_LINUX_FILE_SIM # This is used to simulate the flash memory using files
+)
+
 #######=================Test executable=================###########################################################
 set(TEST_EXECUTABLE_NAME ${PROJECT_NAME}_exe)
 # Source file(s)
 set(SOURCES
     main.c
 )
+
+set(MAP_FILE "${TEST_EXECUTABLE_NAME}.map")
+set(CMAKE_EXE_LINKER_FLAGS
+    "-Wl,-Map=${MAP_FILE} -Wl,-gc-sections,--print-memory-usage,--build-id -static \
+     -Wl,--start-group -lc -lm -Wl,--end-group")
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -57,6 +67,8 @@ pybind11_add_module(${PYBIND11_MODULE_NAME} pybind11_lib.cpp)
 target_link_libraries(${PYBIND11_MODULE_NAME} PUBLIC flashdb pthread)
 # flasddb relies on fal_cfg.h and fdb_cfg.h, need to make sure they are included
 target_include_directories(flashdb PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# flashdb target also requires the Macro FAL_FLASHDB_LINUX_FILE_SIM to be defined
+target_compile_definitions(flashdb PRIVATE FAL_FLASHDB_LINUX_FILE_SIM)
 
 add_custom_command(TARGET ${PYBIND11_MODULE_NAME} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PYBIND11_MODULE_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/
