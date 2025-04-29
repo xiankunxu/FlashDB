@@ -7,7 +7,6 @@ file(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/samples/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/port/fal/src/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/my_port/src/*.c"
 )
 
 list(

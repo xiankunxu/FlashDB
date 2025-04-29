@@ -15,6 +15,19 @@ static int flash_fd = -1;
 static pthread_mutex_t flash_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* ==================================================================== */
+int my_init(void);
+int my_read(long offset, uint8_t *buf, size_t size);
+int my_write(long offset, const uint8_t *buf, size_t size);
+int my_erase(long offset, size_t size);
+
+const struct fal_flash_dev flashdev_sim = {
+    .name       = "sim_flash",       /* device name */
+    .addr       = 2 * BLOCK_SIZE,    /* base offset in file */
+    .len        = FLASH_SIZE,        /* total size */
+    .blk_size   = BLOCK_SIZE,        /* erase block size */
+    .ops        = {my_init, my_read, my_write, my_erase},
+    .write_gran = 8,
+};
 
 /* FAL port functions: operate on flash.img */
 int my_init(void) {
