@@ -13,6 +13,7 @@ const struct fal_flash_dev flashdev_sim = {
     .ops        = {my_init, my_read, my_write, my_erase},
     .write_gran = 8,
 };
+#define FAL_PART_TABLE                                                                   \
 {                                                                                        \
     {FAL_PART_MAGIC_WORD,  "fdb_kvdb1",    "STM32F7_FLASH", 0*SECTOR_SIZE, 2*SECTOR_SIZE, 0},  \
     {FAL_PART_MAGIC_WORD,  "fdb_tsdb1",    "STM32F7_FLASH", 2*SECTOR_SIZE, 2*SECTOR_SIZE, 0},  \
