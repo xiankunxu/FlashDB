@@ -8,13 +8,14 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(FLASHDB_LIB_PATH "${CMAKE_CURRENT_LIST_DIR}/../")
+set(FLASHDB_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../")
 add_subdirectory(
   "${FLASHDB_LIB_PATH}"
   "${CMAKE_CURRENT_BINARY_DIR}/flashdb"
 )
 
 # This defines MACRO FAL_FLASHDB_LINUX_FILE_SIM for both the flashdb_test_exe and flashdb_test_lib targets.
+# Both targets includes flashdb.h, which imdirectly includes fal_cfg.h that requires this macro to be defined.
 add_compile_definitions(
     FAL_FLASHDB_LINUX_FILE_SIM # This is used to simulate the flash memory using files
 )

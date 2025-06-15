@@ -127,6 +127,20 @@ static fdb_time_t get_time(void)
     return ++counts;
 }
 
+static bool my_query_cb(fdb_tsl_t tsl, void *arg) {
+    if (tsl->log_len == 8) {
+        return false;
+    }
+
+    struct fdb_blob blob;
+    fdb_tsdb_t db = arg;
+    uint8_t buf[tsl->log_len];
+
+    fdb_blob_read((fdb_db_t) db, fdb_tsl_to_blob(tsl, fdb_blob_make(&blob, buf, tsl->log_len)));
+    printf("[%u] %s\n", (unsigned)tsl->time, (char*)buf);
+    return false;
+}
+
 int main(void) {
     fdb_err_t result;
 
@@ -182,7 +196,27 @@ int main(void) {
         }
 
         /* run TSDB sample */
-        tsdb_sample(&tsdb);
+//        tsdb_sample(&tsdb);
+
+        /* Append a log entry */
+        struct fdb_blob blob;
+        char log_data[128];
+        snprintf(log_data, sizeof(log_data), "Log entry at time %d", counts + 1);
+        fdb_blob_make(&blob, log_data, strlen(log_data) + 1); // +1 for null terminator
+        result = fdb_tsl_append(&tsdb, &blob);
+        if (result != FDB_NO_ERR) {
+            printf("TSDB append failed: %d\n", result);
+            return -1;
+        }
+        printf("TSDB append succeeded.\n");
+        /* Query the TSDB by time */
+
+        printf("Querying TSDB entries by iterating============:\n");
+        fdb_tsl_iter(&tsdb, my_query_cb, &tsdb);
+        
+        printf("Querying TSDB entries by time=================:\n");
+        time_t from_time = 1, to_time = 20;
+        fdb_tsl_iter_by_time(&tsdb, from_time, to_time, my_query_cb, &tsdb);
     }
 #endif /* FDB_USING_TSDB */
 

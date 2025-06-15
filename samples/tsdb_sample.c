@@ -63,9 +63,10 @@ void tsdb_sample(fdb_tsdb_t tsdb)
 
     { /* QUERY the TSDB by time */
         /* prepare query time (from 1970-01-01 00:00:00 to 2020-05-05 00:00:00) */
-        struct tm tm_from = { .tm_year = 1970 - 1900, .tm_mon = 0, .tm_mday = 1, .tm_hour = 0, .tm_min = 0, .tm_sec = 0 };
+        struct tm tm_from = { .tm_year = 1970 - 1900, .tm_mon = 0, .tm_mday = 0, .tm_hour = 0, .tm_min = 0, .tm_sec = 1 };
         struct tm tm_to = { .tm_year = 2020 - 1900, .tm_mon = 4, .tm_mday = 5, .tm_hour = 0, .tm_min = 0, .tm_sec = 0 };
-        time_t from_time = mktime(&tm_from), to_time = mktime(&tm_to);
+//        time_t from_time = mktime(&tm_from), to_time = mktime(&tm_to);
+        time_t from_time = 1, to_time = 20;
         size_t count;
         /* query all TSL in TSDB by time */
         fdb_tsl_iter_by_time(tsdb, from_time, to_time, query_by_time_cb, tsdb);
