@@ -141,6 +141,16 @@ static bool my_query_cb(fdb_tsl_t tsl, void *arg) {
     return false;
 }
 
+static bool oldest_tsl_cb(fdb_tsl_t tsl, void *arg) {
+    struct fdb_blob blob;
+    fdb_tsdb_t db = arg;
+    uint8_t buf[tsl->log_len];
+
+    fdb_blob_read((fdb_db_t) db, fdb_tsl_to_blob(tsl, fdb_blob_make(&blob, buf, tsl->log_len)));
+    printf("oldest time: [%u], log: %s\n", (unsigned)tsl->time, (char*)buf);
+    return true;
+}
+
 int main(void) {
     fdb_err_t result;
 
@@ -215,8 +225,13 @@ int main(void) {
         fdb_tsl_iter(&tsdb, my_query_cb, &tsdb);
         
         printf("Querying TSDB entries by time=================:\n");
-        time_t from_time = 1, to_time = 20;
+        time_t from_time = 1, to_time = counts;
         fdb_tsl_iter_by_time(&tsdb, from_time, to_time, my_query_cb, &tsdb);
+
+        printf("Get oldest TSDB entry =================:\n");
+        from_time = 0;
+        to_time = counts;
+        fdb_tsl_iter_by_time(&tsdb, from_time, to_time, oldest_tsl_cb, &tsdb);
     }
 #endif /* FDB_USING_TSDB */
 

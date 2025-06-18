@@ -5,7 +5,6 @@ set(THIS_MODULE_NAME ${PROJECT_NAME})
 file(
     GLOB_RECURSE SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/samples/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/port/fal/src/*.c"
 )
 

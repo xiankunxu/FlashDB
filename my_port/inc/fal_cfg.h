@@ -80,16 +80,30 @@ extern "C" {
     #endif
 
     /* using TSDB (Time series database) feature */
-    // #define FDB_USING_TSDB
+#ifdef FAL_FLASHDB_W25QXX
+    #define FDB_USING_TSDB
+#endif /* FAL_FLASHDB_W25QXX */
 
     /* ===================== Flash device Configuration ========================= */
     extern const struct fal_flash_dev stm32fx_onchip_flash;
+#if defined(FAL_FLASHDB_W25QXX)
+    extern const struct fal_flash_dev w25q512_flash;
+#endif /* FAL_FLASHDB_W25QXX */
 
     /* flash device table */
-    #define FAL_FLASH_DEV_TABLE                                          \
-    {                                                                    \
-        &stm32fx_onchip_flash,                                                  \
+
+#ifdef FAL_FLASHDB_W25QXX
+    #define FAL_FLASH_DEV_TABLE       \
+    {                                 \
+        &stm32fx_onchip_flash,        \
+        &w25q512_flash,               \
     }
+#else /* FAL_FLASHDB_W25QXX */
+    #define FAL_FLASH_DEV_TABLE       \
+    {                                 \
+        &stm32fx_onchip_flash,        \
+    }
+#endif /* FAL_FLASHDB_W25QXX */
 
     #define FDB_KV_CACHE_TABLE_SIZE       8     /* KV cache table size, set depending on the possible maximum number of keys */
     /* sector cache table size, set depending on the number of sectors for the KVDB flash. The last three sectors are used as
@@ -101,10 +115,18 @@ extern "C" {
     /* partition table: only KVDB for stm32f7 on chip flash. As there are only three sectors available for FlashDB, for if both
     * KVDB and TSDB there need at least four sectors. */
     /* Sector9's start address 0x080A0000, which has an offset relative to the flash start address 0x000A0000. */
+#ifdef FAL_FLASHDB_W25QXX
+    #define FAL_PART_TABLE                                                                   \
+    {                                                                                        \
+        {FAL_PART_MAGIC_WORD,  "fdb_kvdb1",    "stm32fx_onchip_flash", 0x000A0000, 3*128*1024, 0},  \
+        {FAL_PART_MAGIC_WORD,  "fdb_tsdb1",    "w25q512_flash", 0x0, 64*1024*1024, 0},  \
+    }
+#else /* FAL_FLASHDB_W25QXX */
     #define FAL_PART_TABLE                                                                   \
     {                                                                                        \
         {FAL_PART_MAGIC_WORD,  "fdb_kvdb1",    "stm32fx_onchip_flash", 0x000A0000, 3*128*1024, 0},  \
     }
+#endif /* FAL_FLASHDB_W25QXX */
     #endif /* FAL_PART_HAS_TABLE_CFG */
 
 #endif /* FAL_FLASHDB_STM32F4 */

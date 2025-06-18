@@ -23,8 +23,13 @@ add_compile_definitions(
 #######=================Test executable=================###########################################################
 set(TEST_EXECUTABLE_NAME ${PROJECT_NAME}_exe)
 # Source file(s)
-set(SOURCES
-    main.c
+file(
+    GLOB_RECURSE SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/../samples/*.c"
+)
+list(
+    APPEND SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/main.c"
 )
 
 set(MAP_FILE "${TEST_EXECUTABLE_NAME}.map")
